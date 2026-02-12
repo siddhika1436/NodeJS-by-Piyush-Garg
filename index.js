@@ -1,9 +1,12 @@
 const express = require("express");
 const { connectToMongoDB } = require('./mongooseConnect')
-const urlRoute = require('./routes/url')
-const staticRoute = require('./routes/staticRoute')
 const path = require('path')
 const URL = require('./models/url');
+const urlRoute = require('./routes/url')
+const staticRoute = require('./routes/staticRoute')
+const userRoute = require('./routes/user')
+const {restrictToLoggedinUserOnly, checkAuth} = require('./middlewares/auth');
+const cookieParser = require("cookie-parser");
 
 const app = express();
 const PORT = 8001;
@@ -16,9 +19,14 @@ app.set("views" , path.resolve("./views"))
 
 app.use(express.json())
 app.use(express.urlencoded({extended:false})) //for form data
+app.use(cookieParser());
 
-app.use("/url" , urlRoute)
-app.use("/" , staticRoute)
+
+
+app.use("/url" , restrictToLoggedinUserOnly,urlRoute)
+
+app.use("/user", userRoute)
+app.use("/" , checkAuth,staticRoute)
 
 // Server Side Rendering -> 
 // Write html on server side -> complicated
